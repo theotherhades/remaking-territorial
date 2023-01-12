@@ -10,7 +10,7 @@ export default class GameEngine {
             if (event.code === "Space") {
                 this.expandPixels();
             }
-        })
+        });
     }
 
     /**
