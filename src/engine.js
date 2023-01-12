@@ -46,14 +46,10 @@ export default class GameEngine {
         let pixelsToOccupy = [];
         this.pixelsOwned.forEach((pixel) => {
             [
-                [pixel[0] - 4, pixel[1] - 4], // Northwest
                 [pixel[0] - 4, pixel[1]], // West
-                [pixel[0] - 4, pixel[1] + 4], // Southwest
                 [pixel[0], pixel[1] + 4], // South
                 [pixel[0], pixel[1] - 4], // North
-                [pixel[0] + 4, pixel[1] - 4], // Northeast
                 [pixel[0] + 4, pixel[1]], // East
-                [pixel[0] + 4, pixel[1] + 4] // Southeast
             ].forEach((neighbor) => {
                 if (this.pixelsOwned.includes(neighbor)) {
                     return;
