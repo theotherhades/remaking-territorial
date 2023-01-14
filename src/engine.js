@@ -5,6 +5,7 @@ export default class GameEngine {
         this.canvasHeight = this.canvas.height - 4;
         this.ctx = this.canvas.getContext("2d");
         this.pixelsOwned = [];
+        this.borderPixels = [];
 
         document.addEventListener("keyup", (event) => {
             if (event.code === "Space") {
@@ -31,20 +32,22 @@ export default class GameEngine {
      * @param {*} x
      * @param {*} y
      */
-    drawPixel(x, y) {
+    drawPixel(x, y, init = false) {
         if (this.checkInt(x) === false || this.checkInt(y) === false) {
             console.error(`Pixels must only be drawn at coordinates divisible by 4\nProvided coordinates: (x:${x}, y:${y})`);
         } else {
             this.ctx.fillStyle = "black";
             this.ctx.fillRect(x, y, 4, 4);
             this.pixelsOwned.push([x, y]);
-            console.log(this.pixelsOwned);
+            if (init) {
+                this.borderPixels.push([x, y]);
+            }
         }
     }
 
     expandPixels() {
         let pixelsToOccupy = [];
-        this.pixelsOwned.forEach((pixel) => {
+        this.borderPixels.forEach((pixel) => {
             [
                 [pixel[0] - 4, pixel[1]], // West
                 [pixel[0], pixel[1] + 4], // South
@@ -61,5 +64,8 @@ export default class GameEngine {
         pixelsToOccupy.forEach((pixel) => {
             this.drawPixel(pixel[0], pixel[1]);
         });
+        this.borderPixels = pixelsToOccupy;
+        console.log(this.pixelsOwned);
+        console.log(this.borderPixels);
     }
 }
