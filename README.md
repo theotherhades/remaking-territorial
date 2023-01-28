@@ -12,3 +12,7 @@ git clone https://github.com/theotherhades/remaking-territorial.git
 cd remaking-territorial
 py -m http.server 8000
 ```
+
+> **Note**
+> 
+> To ~~flood the console~~ enable helpful debugging tools, add `engine.debugMode = true;` to the bottom of `src/main.js`.

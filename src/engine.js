@@ -6,6 +6,7 @@ export default class GameEngine {
         this.ctx = this.canvas.getContext("2d");
         this.pixelsOwned = new Set([]);
         this.borderPixels = new Set([]);
+        this.debugMode = false;
 
         document.addEventListener("keyup", (event) => {
             if (event.code === "Space") {
@@ -38,53 +39,47 @@ export default class GameEngine {
         } else {
             this.ctx.fillStyle = "black";
             this.ctx.fillRect(x, y, 4, 4);
-            this.pixelsOwned.add([x, y]);
+            this.pixelsOwned.add(`${x},${y}`);
             if (init) {
-                this.borderPixels.add([x, y]);
+                this.borderPixels.add(`${x},${y}`);
             }
         }
     }
 
+    /**
+     * Checks if pixel (x, y) is owned.
+     * @param {*} x 
+     * @param {*} y 
+     */
+    hasPixel(x, y) {
+        return this.pixelsOwned.has(`${x},${y}`);
+    }
+
     expandPixels() {
         let pixelsToOccupy = new Set([]);
-        /*
-        this.borderPixels.forEach((pixel) => {
-            [
-                [pixel[0] - 4, pixel[1]], // West
-                [pixel[0], pixel[1] + 4], // South
-                [pixel[0], pixel[1] - 4], // North
-                [pixel[0] + 4, pixel[1]], // East
-            ].forEach((neighbor) => {
-                if (this.pixelsOwned.has(neighbor)) {
-                    return;
-                } else {
-                    pixelsToOccupy.add(neighbor);
-                }
-            });
-        });
-        pixelsToOccupy.forEach((pixel) => {
-            this.drawPixel(pixel[0], pixel[1]);
-        });
-        */
-        for (const pixel of this.borderPixels) {
+
+        for (let pixel of this.borderPixels) {
+            pixel = pixel.split(",");
             for (const neighbor of [
-                [pixel[0] - 4, pixel[1]], // West
-                [pixel[0], pixel[1] + 4], // South
-                [pixel[0], pixel[1] - 4], // North
-                [pixel[0] + 4, pixel[1]], // East
+                [parseInt(pixel[0]) - 4, parseInt(pixel[1])], // West
+                [parseInt(pixel[0]), parseInt(pixel[1]) + 4], // South
+                [parseInt(pixel[0]), parseInt(pixel[1]) - 4], // North
+                [parseInt(pixel[0]) + 4, parseInt(pixel[1])], // East
             ]) {
-                if (this.pixelsOwned.has(neighbor)) {
+                if (this.hasPixel(neighbor[0], neighbor[1])) {
+                    if (this.debugMode) { console.log("pixel owned"); }
                     continue;
                 } else {
-                    pixelsToOccupy.add(neighbor);
+                    pixelsToOccupy.add(`${neighbor[0]},${neighbor[1]}`);
                 }
             }
         }
-        for (const pixel of pixelsToOccupy) {
+        for (let pixel of pixelsToOccupy) {
+            pixel = pixel.split(",");
             this.drawPixel(pixel[0], pixel[1]);
         }
-        console.log(this.borderPixels);
-        this.borderPixels = pixelsToOccupy;
-        console.log(this.borderPixels);
+        if (this.debugMode) { console.log(this.borderPixels); }
+        this.borderPixels = new Set(pixelsToOccupy);
+        if (this.debugMode) { console.log(this.borderPixels); }
     }
 }
