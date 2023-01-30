@@ -66,11 +66,13 @@ export default class GameEngine {
                 [parseInt(pixel[0]), parseInt(pixel[1]) - 4], // North
                 [parseInt(pixel[0]) + 4, parseInt(pixel[1])], // East
             ]) {
-                if (this.hasPixel(neighbor[0], neighbor[1])) {
-                    if (this.debugMode) { console.log("pixel owned"); }
-                    continue;
-                } else {
-                    pixelsToOccupy.add(`${neighbor[0]},${neighbor[1]}`);
+                if (!(neighbor[0] < 0 || neighbor[0] > this.canvasWidth || neighbor[1] < 0 || neighbor[1] > this.canvasHeight)) {
+                    if (this.hasPixel(neighbor[0], neighbor[1])) {
+                        if (this.debugMode) { console.log("pixel owned"); }
+                        continue;
+                    } else {
+                        pixelsToOccupy.add(`${neighbor[0]},${neighbor[1]}`);
+                    }
                 }
             }
         }
