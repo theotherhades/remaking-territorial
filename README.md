@@ -1,5 +1,5 @@
 # Remaking Territorial.io
-Feel free to contribute via issues or pull requests.
+Feel free to contribute via issues or pull requests. Oh, and you should join our [Discord](https://discord.gg/S9GEnVU8Wz) for updates and stuff.
 
 ## Developing
 1. Clone the repo: `git clone https://github.com/theotherhades/remaking-territorial.git`
