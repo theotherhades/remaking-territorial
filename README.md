@@ -13,6 +13,9 @@ cd remaking-territorial
 py -m http.server 8000
 ```
 
-> **Note**
-> 
-> To ~~flood the console~~ enable helpful debugging tools, add `engine.debugMode = true;` to the bottom of `src/main.js`.
+## Debug Mode
+When developing it's recommended you enable debug mode. Just pass `true` as a second argument to the GameEngine in `src/main.js`, like so:
+```js
+const engine = new GameEngine("gameCanvas", true);
+```
+You should get a `Debug mode is enabled` message in your browser console to confirm that it's enabled.

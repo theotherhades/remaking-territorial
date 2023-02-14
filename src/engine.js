@@ -1,12 +1,12 @@
 export default class GameEngine {
-    constructor(canvasName) {
+    constructor(canvasName, debug = false) {
         this.canvas = document.getElementById(canvasName);
         this.canvasWidth = this.canvas.width - 4;
         this.canvasHeight = this.canvas.height - 4;
         this.ctx = this.canvas.getContext("2d");
         this.pixelsOwned = new Set([]);
         this.borderPixels = new Set([]);
-        this.debugMode = false;
+        this.debugMode = debug;
 
         // `nation` will be the internal name for player territory
         this.nations = {};
@@ -17,6 +17,10 @@ export default class GameEngine {
                 this.expandPixels(this.player);
             }
         });
+
+        if (this.debugMode) {
+            console.log("Debug mode is enabled");
+        }
     }
 
     /**
@@ -36,25 +40,30 @@ export default class GameEngine {
      * Draws a pixel at coordinates (x, y)
      * @param {*} x
      * @param {*} y
+     * @param {*} isBorder Determines if the pixel should be drawn as a border pixel and added to the `borderPixels` set. Defaults to `false`.
      */
-    drawPixel(nation, x, y, init = false) {
+    drawPixel(nation, x, y, isBorder = false) {
         if (this.checkInt(x) === false || this.checkInt(y) === false) {
             console.error(`Pixels must only be drawn at coordinates divisible by 4\nProvided coordinates: (x:${x}, y:${y})`);
         } else {
             let taken = false;
-            for (const nation of Object.keys(this.nations)) {
-                if (this.nations[nation].pixelsOwned.has(`${x},${y}`)) {
+            for (const nationIter of Object.keys(this.nations)) {
+                if (nationIter === nation) {
+                    continue;
+                } else if (this.nations[nationIter].pixelsOwned.has(`${x},${y}`)) {
                     taken = true;
                     break;
                 }
             }
             if (!taken) {
-                this.ctx.fillStyle = this.nations[nation].color;
+                if (isBorder) {
+                    this.nations[nation].borderPixels.add(`${x},${y}`);
+                    this.ctx.fillStyle = this.nations[nation].borderColor;
+                } else {
+                    this.ctx.fillStyle = this.nations[nation].color;
+                }
                 this.ctx.fillRect(x, y, 4, 4);
                 this.nations[nation].pixelsOwned.add(`${x},${y}`);
-                if (init) {
-                    this.nations[nation].borderPixels.add(`${x},${y}`);
-                }
             }
         }
     }
@@ -63,13 +72,15 @@ export default class GameEngine {
      * Register a new nation with the engine, for multiplayer.
      * @param {*} id The internal id for the nation.
      * @param {*} color The color the nation's pixels will be.
+     * @param {*} borderColor The color the nation's border pixels will be.
      * @param {*} isPlayer Does this nation belong to the client's player? (true or false)
      * @param {*} x
      * @param {*} y
      */
-    registerNation(id, color, isPlayer, x, y) {
+    registerNation(id, color, borderColor, isPlayer, x, y) {
         this.nations[id] = {
             color: color,
+            borderColor: borderColor,
             isPlayer: isPlayer,
             pixelsOwned: new Set([]),
             borderPixels: new Set([])
@@ -80,6 +91,10 @@ export default class GameEngine {
             [x + 4, y],
             [x, y + 4],
             [x + 4, y + 4],
+        ]) {
+            this.drawPixel(id, pixel[0], pixel[1]);
+        }
+        for (const pixel of [
             [x - 4, y],
             [x, y - 4],
             [x + 8, y],
@@ -117,9 +132,22 @@ export default class GameEngine {
                 }
             }
         }
-        for (let pixel of pixelsToOccupy) {
+        for (const pixel of pixelsToOccupy) {
+            for (const nationIter of Object.keys(this.nations)) {
+                if (nationIter === nation) {
+                    continue;
+                } else if (this.nations[nationIter].pixelsOwned.has(`${pixel[0]},${pixel[1]}`)) {
+                    pixelsToOccupy.delete(`${pixel[0]},${pixel[1]}`);
+                }
+            }
+        }
+        for (let pixel of this.nations[nation].borderPixels) {
             pixel = pixel.split(",");
             this.drawPixel(nation, pixel[0], pixel[1]);
+        }
+        for (let pixel of pixelsToOccupy) {
+            pixel = pixel.split(",");
+            this.drawPixel(nation, pixel[0], pixel[1], true);
         }
         if (this.debugMode) { console.log(this.nations[nation].borderPixels); }
         this.nations[nation].borderPixels = new Set(pixelsToOccupy);
