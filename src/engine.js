@@ -149,6 +149,59 @@ export default class GameEngine {
             pixel = pixel.split(",");
             this.drawPixel(nation, pixel[0], pixel[1], true);
         }
+        for (let pixel of this.nations[nation].pixelsOwned) {
+            pixel = pixel.split(",");
+            for (const neighbor of [
+                [parseInt(pixel[0]) - 4, parseInt(pixel[1])], // West
+                [parseInt(pixel[0]), parseInt(pixel[1]) + 4], // South
+                [parseInt(pixel[0]), parseInt(pixel[1]) - 4], // North
+                [parseInt(pixel[0]) + 4, parseInt(pixel[1])], // East
+            ]) {
+                if (
+                    !(
+                        neighbor[0] < 0 ||
+                        neighbor[0] > this.canvasWidth ||
+                        neighbor[1] < 0 ||
+                        neighbor[1] > this.canvasHeight
+                    )
+                ) {
+                    for (const nationIter of Object.keys(this.nations)) {
+                        if (nationIter === nation) {
+                            continue;
+                        } else if (
+                            this.nations[nationIter].pixelsOwned.has(
+                                `${neighbor[0]},${neighbor[1]}`
+                            )
+                        ) {
+                            this.drawPixel(nation, pixel[0], pixel[1], true);
+                            break;
+                        }
+                    }
+                }
+            }
+        }
+        for (let pixel of this.nations[nation].pixelsOwned) {
+            pixel = pixel.split(",");
+            for (const neighbor of [
+                [parseInt(pixel[0]) - 4, parseInt(pixel[1])], // West
+                [parseInt(pixel[0]), parseInt(pixel[1]) + 4], // South
+                [parseInt(pixel[0]), parseInt(pixel[1]) - 4], // North
+                [parseInt(pixel[0]) + 4, parseInt(pixel[1])], // East
+            ]) {
+                if (
+                    !(
+                        neighbor[0] < 0 ||
+                        neighbor[0] > this.canvasWidth ||
+                        neighbor[1] < 0 ||
+                        neighbor[1] > this.canvasHeight
+                    )
+                ) {
+                    continue;
+                } else {
+                    this.drawPixel(nation, pixel[0], pixel[1], true);
+                }
+            }
+        }
         if (this.debugMode) { console.log(this.nations[nation].borderPixels); }
         this.nations[nation].borderPixels = new Set(pixelsToOccupy);
         if (this.debugMode) { console.log(this.nations[nation].borderPixels); }
