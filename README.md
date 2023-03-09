@@ -1,6 +1,8 @@
 # Remaking Territorial.io
 Feel free to contribute via issues or pull requests. Oh, and you should join our [Discord](https://discord.gg/S9GEnVU8Wz) for updates and stuff.
 
+You can try it out at [https://theotherhades.github.io/remaking-territorial](https://theotherhades.github.io/remaking-territorial)
+
 ## Developing
 1. Clone the repo: `git clone https://github.com/theotherhades/remaking-territorial.git`
 2. Run an HTTP server locally in the cloned directory. I use `py -m http.server 8000` (which requires [Python](https://python.org)) but feel free to use any you prefer.
