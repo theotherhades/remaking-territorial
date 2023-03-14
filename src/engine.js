@@ -14,13 +14,15 @@ export default class GameEngine {
 
         document.addEventListener("keydown", (event) => {
             if (event.code === "Space") {
-                this.expandPixels(this.player);
+                this.serverExpandPixels(this.player);
             }
         });
 
         if (this.debugMode) {
             console.log("Debug mode is enabled");
         }
+
+        this.connectToServer();
     }
 
     /**
@@ -66,7 +68,30 @@ export default class GameEngine {
                 this.nations[nation].pixelsOwned.add(`${x},${y}`);
             }
         }
+    }     
+    
+    /**
+     * Register a new nation with the server.
+     * @param {*} id The internal id for the nation.
+     * @param {*} color The color the nation's pixels will be.
+     * @param {*} borderColor The color the nation's border pixels will be.
+     * @param {*} isPlayer Does this nation belong to the client's player? (true or false)
+     * @param {*} x
+     * @param {*} y
+     */
+    registerNation(id, color, borderColor, isPlayer, x, y) {
+        let data = {
+            type: "registerNation",
+            id: id,
+            color: color,
+            borderColor: borderColor,
+            isPlayer: isPlayer,
+            x: x,
+            y: y
+        };
+        this.socket.send(JSON.stringify(data));
     }
+
 
     /**
      * Register a new nation with the engine, for multiplayer.
@@ -77,7 +102,7 @@ export default class GameEngine {
      * @param {*} x
      * @param {*} y
      */
-    registerNation(id, color, borderColor, isPlayer, x, y) {
+    setupNation(id, color, borderColor, isPlayer, x, y) {
         this.nations[id] = {
             color: color,
             borderColor: borderColor,
@@ -107,6 +132,14 @@ export default class GameEngine {
         ]) {
             this.drawPixel(id, pixel[0], pixel[1], true);
         }
+    }
+
+    serverExpandPixels(nation) {
+        let data = {
+            type: "expandPixels",
+            nation: nation
+        };
+        this.socket.send(JSON.stringify(data));
     }
 
     expandPixels(nation) {
@@ -205,5 +238,20 @@ export default class GameEngine {
         if (this.debugMode) { console.log(this.nations[nation].borderPixels); }
         this.nations[nation].borderPixels = new Set(pixelsToOccupy);
         if (this.debugMode) { console.log(this.nations[nation].borderPixels); }
+    }
+
+    connectToServer() {
+        this.socket = new WebSocket("ws://localhost:4444");
+        this.socket.onopen = () => {
+
+        };
+        this.socket.onmessage = (event) => {
+            const data = JSON.parse(event.data);
+            if (data.type === "registerNation") {
+                this.setupNation(data.id, data.color, data.borderColor, data.isPlayer, data.x, data.y);
+            } else if (data.type === "expandPixels") {
+                this.expandPixels(data.nation);
+            }
+        };
     }
 }
