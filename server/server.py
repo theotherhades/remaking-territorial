@@ -1,10 +1,13 @@
 import websockets
 import asyncio
+from gameclass import Game
+import json
 
 
 class Server:
     def __init__(self, port):
         self.port = port
+        self.game = Game()
         self.connections = set()
         self.start_server = websockets.serve(self.handler, 'localhost', self.port)
         self.loop = asyncio.get_event_loop()
@@ -16,7 +19,20 @@ class Server:
         try:
             while True:
                 data = await websocket.recv()
-                await self.broadcast(data)
+                data = json.loads(data)
+                if data['type'] == 'expandPixels':
+                    pixelsToOccupy, newBorderPixels, noLongerBorderPixels = self.game.expandPixels(data['id'])
+                    outboundData = {
+                        'type': 'expandPixels',
+                        'nation': data['id'],
+                        'pixelsToOccupy': list(pixelsToOccupy),
+                        'newBorderPixels': list(newBorderPixels),
+                        'noLongerBorderPixels': list(noLongerBorderPixels)
+                    }
+                    await self.broadcast(json.dumps(outboundData))
+                elif data['type'] == 'registerNation':
+                    outboundData = self.game.registerNation(data)
+                    await self.broadcast(json.dumps(outboundData))
         except websockets.exceptions.ConnectionClosed:
             self.connections.remove(websocket)
 
