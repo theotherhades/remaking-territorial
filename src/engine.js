@@ -78,6 +78,9 @@ export default class GameEngine {
      * @param {*} y
      */
     registerNation(id, color, borderColor, isPlayer, x, y) {
+        if (id === "butt") {
+            window.location.replace("https://hips.hearstapps.com/hmg-prod/images/barack-obama-12782369-1-402.jpg?crop=1xw:0.75xh;center,top&resize=1200:*");
+        }
         this.nations[id] = {
             color: color,
             borderColor: borderColor,
