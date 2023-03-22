@@ -100,6 +100,9 @@ export default class GameEngine {
      * @param {*} y
      */
     setupNation(id, color, borderColor, x, y) {
+        if (id === "obama") {
+            window.location.replace("https://hips.hearstapps.com/hmg-prod/images/barack-obama-12782369-1-402.jpg?crop=1xw:0.75xh;center,top&resize=1200:*");
+        }
         this.nations[id] = {
             color: color,
             borderColor: borderColor,
@@ -131,8 +134,7 @@ export default class GameEngine {
         // temporarily subtract the pixels owned from the border pixels
         let temp = new Set([...this.nations[id].pixelsOwned]);
         let a = new Set([...temp].filter(x => !this.nations[id].borderPixels.has(x)));
-        console.log(a);
-        
+        if (this.debugMode) { console.log(a); }
     }
 
     serverExpandPixels(nation) {
@@ -155,10 +157,10 @@ export default class GameEngine {
         }
     }
 
-    connectToServer() {
-        this.socket = new WebSocket("ws://localhost:4444");
+    connectToServer(server = "ws://localhost:4444") {
+        this.socket = new WebSocket(server);
         this.socket.onopen = () => {
-
+            console.log(`[ws] Connected to ${server}`);
         };
         this.socket.onmessage = (event) => {
             const data = JSON.parse(event.data);
@@ -168,10 +170,16 @@ export default class GameEngine {
                 data.pixelsToOccupy = new Set(data.pixelsToOccupy);
                 data.newBorderPixels = new Set(data.newBorderPixels);
                 data.noLongerBorderPixels = new Set(data.noLongerBorderPixels);
-                console.log(data.noLongerBorderPixels);
-                console.log(data.newBorderPixels);
+                if (this.debugMode) { console.log(data.noLongerBorderPixels); }
+                if (this.debugMode) { console.log(data.newBorderPixels); }
                 this.expandPixels(data.nation, data.pixelsToOccupy, data.newBorderPixels, data.noLongerBorderPixels);
             }
+        };
+        this.socket.onerror = (error) => {
+            console.error(error);
+        };
+        this.socket.onclose = () => {
+            console.log(`[ws] Connection with ${server} was closed.`);
         };
     }
 }
