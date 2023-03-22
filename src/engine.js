@@ -14,13 +14,15 @@ export default class GameEngine {
 
         document.addEventListener("keydown", (event) => {
             if (event.code === "Space") {
-                this.expandPixels(this.player);
+                this.serverExpandPixels(this.player);
             }
         });
 
         if (this.debugMode) {
             console.log("Debug mode is enabled");
         }
+
+        this.connectToServer();
     }
 
     /**
@@ -66,25 +68,41 @@ export default class GameEngine {
                 this.nations[nation].pixelsOwned.add(`${x},${y}`);
             }
         }
+    }     
+    
+    /**
+     * Register a new nation with the server.
+     * @param {*} id The internal id for the nation.
+     * @param {*} color The color the nation's pixels will be.
+     * @param {*} borderColor The color the nation's border pixels will be.
+     * @param {*} x
+     * @param {*} y
+     */
+    registerNation(id, color, borderColor, x, y) {
+        let data = {
+            type: "registerNation",
+            id: id,
+            color: color,
+            borderColor: borderColor,
+            x: x,
+            y: y
+        };
+        this.socket.send(JSON.stringify(data));
     }
+
 
     /**
      * Register a new nation with the engine, for multiplayer.
      * @param {*} id The internal id for the nation.
      * @param {*} color The color the nation's pixels will be.
      * @param {*} borderColor The color the nation's border pixels will be.
-     * @param {*} isPlayer Does this nation belong to the client's player? (true or false)
      * @param {*} x
      * @param {*} y
      */
-    registerNation(id, color, borderColor, isPlayer, x, y) {
-        if (id === "butt") {
-            window.location.replace("https://hips.hearstapps.com/hmg-prod/images/barack-obama-12782369-1-402.jpg?crop=1xw:0.75xh;center,top&resize=1200:*");
-        }
+    setupNation(id, color, borderColor, x, y) {
         this.nations[id] = {
             color: color,
             borderColor: borderColor,
-            isPlayer: isPlayer,
             pixelsOwned: new Set([]),
             borderPixels: new Set([])
         };
@@ -110,103 +128,50 @@ export default class GameEngine {
         ]) {
             this.drawPixel(id, pixel[0], pixel[1], true);
         }
+        // temporarily subtract the pixels owned from the border pixels
+        let temp = new Set([...this.nations[id].pixelsOwned]);
+        let a = new Set([...temp].filter(x => !this.nations[id].borderPixels.has(x)));
+        console.log(a);
+        
     }
 
-    expandPixels(nation) {
-        let pixelsToOccupy = new Set([]);
+    serverExpandPixels(nation) {
+        let data = {
+            type: "expandPixels",
+            id: nation
+        };
+        this.socket.send(JSON.stringify(data));
+    }
 
-        for (let pixel of this.nations[nation].borderPixels) {
-            pixel = pixel.split(",");
-            for (const neighbor of [
-                [parseInt(pixel[0]) - 4, parseInt(pixel[1])], // West
-                [parseInt(pixel[0]), parseInt(pixel[1]) + 4], // South
-                [parseInt(pixel[0]), parseInt(pixel[1]) - 4], // North
-                [parseInt(pixel[0]) + 4, parseInt(pixel[1])], // East
-            ]) {
-                if (!(neighbor[0] < 0 || neighbor[0] > this.canvasWidth || neighbor[1] < 0 || neighbor[1] > this.canvasHeight)) {
-                    if (this.nations[nation].pixelsOwned.has(`${neighbor[0]},${neighbor[1]}`)) {
-                        if (this.debugMode) { console.log("pixel owned"); }
-                        continue;
-                    } else {
-                        pixelsToOccupy.add(`${neighbor[0]},${neighbor[1]}`);
-                    }
-                } else if (this.debugMode) {
-                    console.log("pixel is out of bounds");
-                }
-            }
-        }
+    expandPixels(nation, pixelsToOccupy, newBorderPixels, noLongerBorderPixels) {
         for (const pixel of pixelsToOccupy) {
-            for (const nationIter of Object.keys(this.nations)) {
-                if (nationIter === nation) {
-                    continue;
-                } else if (this.nations[nationIter].pixelsOwned.has(`${pixel[0]},${pixel[1]}`)) {
-                    pixelsToOccupy.delete(`${pixel[0]},${pixel[1]}`);
-                }
-            }
-        }
-        for (let pixel of this.nations[nation].borderPixels) {
-            pixel = pixel.split(",");
             this.drawPixel(nation, pixel[0], pixel[1]);
         }
-        for (let pixel of pixelsToOccupy) {
-            pixel = pixel.split(",");
+        for (const pixel of newBorderPixels) {
             this.drawPixel(nation, pixel[0], pixel[1], true);
         }
-        for (let pixel of this.nations[nation].pixelsOwned) {
-            pixel = pixel.split(",");
-            for (const neighbor of [
-                [parseInt(pixel[0]) - 4, parseInt(pixel[1])], // West
-                [parseInt(pixel[0]), parseInt(pixel[1]) + 4], // South
-                [parseInt(pixel[0]), parseInt(pixel[1]) - 4], // North
-                [parseInt(pixel[0]) + 4, parseInt(pixel[1])], // East
-            ]) {
-                if (
-                    !(
-                        neighbor[0] < 0 ||
-                        neighbor[0] > this.canvasWidth ||
-                        neighbor[1] < 0 ||
-                        neighbor[1] > this.canvasHeight
-                    )
-                ) {
-                    for (const nationIter of Object.keys(this.nations)) {
-                        if (nationIter === nation) {
-                            continue;
-                        } else if (
-                            this.nations[nationIter].pixelsOwned.has(
-                                `${neighbor[0]},${neighbor[1]}`
-                            )
-                        ) {
-                            this.drawPixel(nation, pixel[0], pixel[1], true);
-                            break;
-                        }
-                    }
-                }
-            }
+        for (const pixel of noLongerBorderPixels) {
+            this.drawPixel(nation, pixel[0], pixel[1]);
         }
-        for (let pixel of this.nations[nation].pixelsOwned) {
-            pixel = pixel.split(",");
-            for (const neighbor of [
-                [parseInt(pixel[0]) - 4, parseInt(pixel[1])], // West
-                [parseInt(pixel[0]), parseInt(pixel[1]) + 4], // South
-                [parseInt(pixel[0]), parseInt(pixel[1]) - 4], // North
-                [parseInt(pixel[0]) + 4, parseInt(pixel[1])], // East
-            ]) {
-                if (
-                    !(
-                        neighbor[0] < 0 ||
-                        neighbor[0] > this.canvasWidth ||
-                        neighbor[1] < 0 ||
-                        neighbor[1] > this.canvasHeight
-                    )
-                ) {
-                    continue;
-                } else {
-                    this.drawPixel(nation, pixel[0], pixel[1], true);
-                }
+    }
+
+    connectToServer() {
+        this.socket = new WebSocket("ws://localhost:4444");
+        this.socket.onopen = () => {
+
+        };
+        this.socket.onmessage = (event) => {
+            const data = JSON.parse(event.data);
+            if (data.type === "registerNation") {
+                this.setupNation(data.id, data.color, data.borderColor, data.x, data.y);
+            } else if (data.type === "expandPixels") {
+                data.pixelsToOccupy = new Set(data.pixelsToOccupy);
+                data.newBorderPixels = new Set(data.newBorderPixels);
+                data.noLongerBorderPixels = new Set(data.noLongerBorderPixels);
+                console.log(data.noLongerBorderPixels);
+                console.log(data.newBorderPixels);
+                this.expandPixels(data.nation, data.pixelsToOccupy, data.newBorderPixels, data.noLongerBorderPixels);
             }
-        }
-        if (this.debugMode) { console.log(this.nations[nation].borderPixels); }
-        this.nations[nation].borderPixels = new Set(pixelsToOccupy);
-        if (this.debugMode) { console.log(this.nations[nation].borderPixels); }
+        };
     }
 }
