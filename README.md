@@ -21,3 +21,6 @@ When developing it's recommended you enable debug mode. Just pass `true` as a se
 const engine = new GameEngine("gameCanvas", true);
 ```
 You should get a `Debug mode is enabled` message in your browser console to confirm that it's enabled.
+
+## Sister Repositories
+- [TomfoolerousGitHub/remaking-territorial-server](https://github.com/TomfoolerousGitHub/remaking-territorial-server)
