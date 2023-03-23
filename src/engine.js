@@ -176,7 +176,7 @@ export default class GameEngine {
             }
         };
         this.socket.onerror = (error) => {
-            console.error(error);
+            console.error(`[ws] An error occurred: ${error}`);
         };
         this.socket.onclose = () => {
             console.log(`[ws] Connection with ${server} was closed.`);
