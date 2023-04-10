@@ -1,4 +1,4 @@
 import GameEngine from "./engine.js";
 
-const engine = new GameEngine("gameCanvas", true);
+const engine = new GameEngine("gameCanvas");
 window.engine = engine;
