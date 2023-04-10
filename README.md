@@ -24,3 +24,4 @@ You should get a `Debug mode is enabled` message in your browser console to conf
 
 ## Sister Repositories
 - [TomfoolerousGitHub/remaking-territorial-server](https://github.com/TomfoolerousGitHub/remaking-territorial-server)
+- [theotherhades/remaking-territorial-main-server](https://github.com/theotherhades/remaking-territorial-main-server)
