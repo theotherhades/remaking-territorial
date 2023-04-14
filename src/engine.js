@@ -168,11 +168,11 @@ export default class GameEngine {
         this.socket.send(JSON.stringify(data));
     }
 
-    attackNation(attacker, defender, pixelsToOccupy, defenderBorderPixels, attackerBorderPixels) {
+    attackNation(attacker, defender, attackerPixelsOwned, defenderBorderPixels, attackerBorderPixels) {
         for (const pixel of defenderBorderPixels) {
             this.drawPixel(defender, pixel[0], pixel[1], true);
         }
-        for (const pixel of pixelsToOccupy) {
+        for (const pixel of attackerPixelsOwned) {
             this.drawPixel(attacker, pixel[0], pixel[1]);
         }
         for (const pixel of attackerBorderPixels) {
@@ -202,7 +202,7 @@ export default class GameEngine {
                 data.pixelsToOccupy = new Set(data.pixelsToOccupy);
                 data.defenderBorderPixels = new Set(data.defenderBorderPixels);
                 data.attackerBorderPixels = new Set(data.attackerBorderPixels);
-                this.attackNation(data.attacker, data.defender, data.pixelsToOccupy, data.defenderBorderPixels, data.attackerBorderPixels);
+                this.attackNation(data.attacker, data.defender, data.attackerPixelsOwned, data.defenderBorderPixels, data.attackerBorderPixels);
             }
         };
         this.socket.onerror = (error) => {
