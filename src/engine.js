@@ -7,6 +7,7 @@ export default class GameEngine {
         this.pixelsOwned = new Set([]);
         this.borderPixels = new Set([]);
         this.debugMode = debug;
+        this.moneyPercentage = document.getElementById("moneyPercentage");
 
         // `nation` will be the internal name for player territory
         this.nations = {};
@@ -129,9 +130,11 @@ export default class GameEngine {
     }
 
     serverExpandPixels(nation) {
+        let moneyPercentage = this.moneyPercentage.value;
         let data = {
             type: "expandPixels",
-            id: nation
+            id: nation,
+            moneyPercentage: moneyPercentage
         };
         this.socket.send(JSON.stringify(data));
     }
@@ -159,11 +162,14 @@ export default class GameEngine {
         if (this.debugMode) {
             console.log(`Rounded to (x:${x}, y:${y})`);
         }
+        let moneyPercentage = this.moneyPercentage.value;
+        console.log(moneyPercentage);
         let data = {
             type: "attackNation",
             id: this.player,
             x: x,
-            y: y
+            y: y,
+            moneyPercentage: moneyPercentage
         };
         this.socket.send(JSON.stringify(data));
     }
