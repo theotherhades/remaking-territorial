@@ -7,6 +7,7 @@ export default class GameEngine {
         this.pixelsOwned = new Set([]);
         this.borderPixels = new Set([]);
         this.debugMode = debug;
+        this.moneyPercentage = document.getElementById("moneyPercentage");
 
         // `nation` will be the internal name for player territory
         this.nations = {};
@@ -16,6 +17,10 @@ export default class GameEngine {
             if (event.code === "Space") {
                 this.serverExpandPixels(this.player);
             }
+        });
+
+        document.addEventListener("click", (event) => {
+            this.serverAttackNation(event);
         });
 
         if (this.debugMode) {
@@ -48,28 +53,15 @@ export default class GameEngine {
         if (this.checkInt(x) === false || this.checkInt(y) === false) {
             console.error(`Pixels must only be drawn at coordinates divisible by 4\nProvided coordinates: (x:${x}, y:${y})`);
         } else {
-            let taken = false;
-            for (const nationIter of Object.keys(this.nations)) {
-                if (nationIter === nation) {
-                    continue;
-                } else if (this.nations[nationIter].pixelsOwned.has(`${x},${y}`)) {
-                    taken = true;
-                    break;
-                }
+            if (isBorder) {
+                this.ctx.fillStyle = this.nations[nation].borderColor;
+            } else {
+                this.ctx.fillStyle = this.nations[nation].color;
             }
-            if (!taken) {
-                if (isBorder) {
-                    this.nations[nation].borderPixels.add(`${x},${y}`);
-                    this.ctx.fillStyle = this.nations[nation].borderColor;
-                } else {
-                    this.ctx.fillStyle = this.nations[nation].color;
-                }
-                this.ctx.fillRect(x, y, 4, 4);
-                this.nations[nation].pixelsOwned.add(`${x},${y}`);
-            }
+            this.ctx.fillRect(x, y, 4, 4);
         }
-    }     
-    
+    }
+
     /**
      * Register a new nation with the server.
      * @param {*} id The internal id for the nation.
@@ -138,9 +130,11 @@ export default class GameEngine {
     }
 
     serverExpandPixels(nation) {
+        let moneyPercentage = this.moneyPercentage.value;
         let data = {
             type: "expandPixels",
-            id: nation
+            id: nation,
+            moneyPercentage: moneyPercentage
         };
         this.socket.send(JSON.stringify(data));
     }
@@ -156,6 +150,43 @@ export default class GameEngine {
             this.drawPixel(nation, pixel[0], pixel[1]);
         }
     }
+
+    serverAttackNation(event) {
+        let x = event.clientX;
+        let y = event.clientY;
+        if (this.debugMode) {
+            console.log(`Clicked at (x:${x}, y:${y})`);
+        }
+        x = Math.round(x / 4) * 4;
+        y = Math.round(y / 4) * 4;
+        if (this.debugMode) {
+            console.log(`Rounded to (x:${x}, y:${y})`);
+        }
+        let moneyPercentage = this.moneyPercentage.value;
+        console.log(moneyPercentage);
+        let data = {
+            type: "attackNation",
+            id: this.player,
+            x: x,
+            y: y,
+            moneyPercentage: moneyPercentage
+        };
+        this.socket.send(JSON.stringify(data));
+    }
+
+    attackNation(attacker, defender, attackerPixelsOwned, defenderBorderPixels, attackerBorderPixels) {
+        for (const pixel of defenderBorderPixels) {
+            this.drawPixel(defender, pixel[0], pixel[1], true);
+        }
+        for (const pixel of attackerPixelsOwned) {
+            this.drawPixel(attacker, pixel[0], pixel[1]);
+        }
+        for (const pixel of attackerBorderPixels) {
+            this.drawPixel(attacker, pixel[0], pixel[1], true);
+        }
+    }
+
+
 
     connectToServer(server = "ws://localhost:4444") {
         this.socket = new WebSocket(server);
@@ -173,6 +204,11 @@ export default class GameEngine {
                 if (this.debugMode) { console.log(data.noLongerBorderPixels); }
                 if (this.debugMode) { console.log(data.newBorderPixels); }
                 this.expandPixels(data.nation, data.pixelsToOccupy, data.newBorderPixels, data.noLongerBorderPixels);
+            } else if (data.type === "attackNation") {
+                data.pixelsToOccupy = new Set(data.pixelsToOccupy);
+                data.defenderBorderPixels = new Set(data.defenderBorderPixels);
+                data.attackerBorderPixels = new Set(data.attackerBorderPixels);
+                this.attackNation(data.attacker, data.defender, data.attackerPixelsOwned, data.defenderBorderPixels, data.attackerBorderPixels);
             }
         };
         this.socket.onerror = (error) => {
