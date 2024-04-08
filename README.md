@@ -1,3 +1,5 @@
+by the way this project is dead in case you couldnt tell from the commit timestamps I just unprivated it due to David's ban on mods recently as there is quite a lot of discussion around making a remaking of territorial now, so I may make a new project similar to this but I don't know at this point.
+
 # Remaking Territorial.io
 Feel free to contribute via issues or pull requests. Oh, and you should join our [Discord](https://discord.gg/S9GEnVU8Wz) for updates and stuff.
 
